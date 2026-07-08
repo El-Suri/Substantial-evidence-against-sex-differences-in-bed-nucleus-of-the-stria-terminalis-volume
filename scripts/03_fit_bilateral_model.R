@@ -8,6 +8,18 @@ require_packages(c(
   "brms", "posterior", "polspline", "bayesplot", "ggplot2",
   "dplyr", "tidyr", "tidybayes", "patchwork", "loo"
 ))
+suppressPackageStartupMessages({
+  library(brms)
+  library(posterior)
+  library(polspline)
+  library(bayesplot)
+  library(ggplot2)
+  library(dplyr)
+  library(tidyr)
+  library(tidybayes)
+  library(patchwork)
+  library(loo)
+})
 
 restricted_path <- read_arg("restricted")
 if (is.null(restricted_path)) {
@@ -172,8 +184,8 @@ line_col <- "black"
 # Figure: model diagnostics.
 # -------------------------------------------------------------------------
 
-fit_mean <- brms::fitted(bayesian_model, summary = TRUE)[, "Estimate"]
-res_mean <- brms::residuals(bayesian_model, summary = TRUE, type = "ordinary")[, "Estimate"]
+fit_mean <- fitted(bayesian_model, summary = TRUE)[, "Estimate"]
+res_mean <- residuals(bayesian_model, summary = TRUE, type = "ordinary")[, "Estimate"]
 df_resid <- data.frame(fitted = fit_mean, residuals = res_mean)
 
 p_diag1 <- ggplot2::ggplot(df_resid, ggplot2::aes(x = fitted, y = residuals)) +
@@ -196,7 +208,7 @@ p_diag2 <- ggplot2::ggplot(df_qq, ggplot2::aes(x = theoretical, y = sample)) +
   ggplot2::labs(title = "Normal Q-Q", x = "Theoretical quantiles", y = "Sample quantiles") +
   shared_theme
 
-p_diag3 <- brms::pp_check(bayesian_model, ndraws = 100, type = "dens_overlay") +
+p_diag3 <- pp_check(bayesian_model, ndraws = 100, type = "dens_overlay") +
   ggplot2::labs(title = "Posterior Predictive Check") +
   shared_theme +
   ggplot2::theme(legend.position = "bottom")
@@ -253,7 +265,7 @@ savage_dickey_plot <- function(x, x_0 = 0, prior_mean = 0, prior_sd = 1) {
 sd_result <- savage_dickey_plot(draws$b_Gender_dummy, prior_mean = pooled_d, prior_sd = prior_sd)
 p_bf1 <- sd_result$plot
 
-ppd <- brms::posterior_predict(bayesian_model)
+ppd <- posterior_predict(bayesian_model)
 ppd_df <- as.data.frame(t(ppd))
 ppd_df$Gender <- df$Gender_dummy
 

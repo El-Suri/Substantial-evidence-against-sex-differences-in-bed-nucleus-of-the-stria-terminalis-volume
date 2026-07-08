@@ -59,16 +59,18 @@ fit_one_width <- function(width) {
     refresh = 0
   )
 
-  fixed <- as.data.frame(brms::fixef(fit, probs = c(0.025, 0.975)))
+  hyp <- brms::hypothesis(fit, "Gender_dummy = 0")$hypothesis
   draws <- posterior::as_draws_df(fit)
   data.frame(
     prior_SD_scaling = width,
     prior_sd = prior_sd,
-    Estimate = fixed["Gender_dummy", "Estimate"],
-    Est.Error = fixed["Gender_dummy", "Est.Error"],
-    CI.Lower = fixed["Gender_dummy", "Q2.5"],
-    CI.Upper = fixed["Gender_dummy", "Q97.5"],
-    BF01 = savage_dickey_bf01(draws$b_Gender_dummy, pooled_d, prior_sd)
+    Estimate = hyp$Estimate,
+    Est.Error = hyp$Est.Error,
+    CI.Lower = hyp$CI.Lower,
+    CI.Upper = hyp$CI.Upper,
+    Evid.Ratio = hyp$Evid.Ratio,
+    Post.Prob = hyp$Post.Prob,
+    BFgender = savage_dickey_bf01(draws$b_Gender_dummy, pooled_d, prior_sd)
   )
 }
 
@@ -90,7 +92,7 @@ line_error_CI <- function(x, y_err, col, alphabar) {
 }
 
 plot_prior_sensitivity <- function(res_all) {
-  bf_ylim <- range(c(1, sqrt(10), res_all$BF01), na.rm = TRUE)
+  bf_ylim <- range(c(1, sqrt(10), res_all$BFgender), na.rm = TRUE)
   beta_ylim <- range(c(res_all$CI.Lower, res_all$CI.Upper, 0), na.rm = TRUE)
 
   old_par <- graphics::par(no.readonly = TRUE)
@@ -98,7 +100,7 @@ plot_prior_sensitivity <- function(res_all) {
   graphics::par(mfrow = c(1, 2), lwd = 1, mar = c(3.2, 3.2, 1.2, 0.8), mgp = c(1.8, 0.5, 0))
 
   graphics::plot(
-    res_all$prior_sd, res_all$BF01,
+    res_all$prior_sd, res_all$BFgender,
     type = "o",
     ylim = bf_ylim,
     ylab = expression(BF["01"]),

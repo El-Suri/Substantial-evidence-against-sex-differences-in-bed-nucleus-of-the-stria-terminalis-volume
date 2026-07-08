@@ -87,7 +87,9 @@ adjusted_d_from_lm <- function(data, outcome, group, covariates,
     new_m[[v]] <- mean(df[[v]], na.rm = TRUE)
   }
 
-  diff_adj <- as.numeric(stats::predict(fit, new_m) - stats::predict(fit, new_f))
+  adjusted_mean_male <- as.numeric(stats::predict(fit, new_m))
+  adjusted_mean_female <- as.numeric(stats::predict(fit, new_f))
+  diff_adj <- adjusted_mean_male - adjusted_mean_female
   d_adj <- diff_adj / stats::sigma(fit)
 
   # Nonparametric bootstrap SE for the adjusted standardized contrast.
@@ -110,6 +112,8 @@ adjusted_d_from_lm <- function(data, outcome, group, covariates,
     n_male = sum(df[[group]] == male_level),
     n_female = sum(df[[group]] == female_level),
     formula = deparse(fmla),
+    adjusted_mean_male = adjusted_mean_male,
+    adjusted_mean_female = adjusted_mean_female,
     adjusted_difference = diff_adj,
     residual_sd = stats::sigma(fit),
     effect_size = d_adj,
@@ -255,12 +259,12 @@ neud <- calc_smd_from_summary(
 # -------------------------------------------------------------------------
 
 prior_table <- rbind(
-  add_result("Allen & Gorski (1990)", "participant-level re-analysis", "Adults only (>=18 years)", "Adjusted standardized mean difference from lm", "Brain.Weight, Age", allen_res$n_male, allen_res$n_female, allen_res$effect_size, allen_res$effect_se, "Regression-adjusted male-female contrast divided by residual SD."),
-  add_result("Chung et al. (2002)", "participant-level re-analysis", "Adults only (>=18 years)", "Adjusted standardized mean difference from lm", "Brain.Weight, Age", chung_res$n_male, chung_res$n_female, chung_res$effect_size, chung_res$effect_se, "Regression-adjusted male-female contrast divided by residual SD."),
-  add_result("Guma et al. (2024)", "participant-level re-analysis", "Paper-matched HCP QC subset", "Adjusted standardized mean difference from lm", "AGE_cent, BrainSegVolNotVent.y, euler", guma_res$n_male[1], guma_res$n_female[1], guma_res$effect_size[1], guma_res$effect_se[1], "Recomputed from private local HCP-derived data if supplied; otherwise read from cached adjusted-effect CSV."),
-  add_result("Zhou et al. (1995)", "published summary statistics", "Adult cisgender participants; transgender hormone-treated participants excluded", "Cohen's d from reported means, SEMs, and reconstructed subgroup SDs", "None available", zhou$n_male, zhou$n_female, zhou$effect_size, zhou$effect_se, "Male group combines heterosexual and homosexual cisgender men."),
+  add_result("Allen & Gorski (1990)", "participant-level re-analysis", "Adults only (>=18 years)", "Adjusted standardized mean difference from lm", "Brain.Weight, Age", allen_res$n_male, allen_res$n_female, allen_res$effect_size, allen_res$effect_se, "Effect derived from regression-adjusted male-female contrast divided by residual SD."),
+  add_result("Chung et al. (2002)", "participant-level re-analysis", "Adults only (>=18 years)", "Adjusted standardized mean difference from lm", "Brain.Weight, Age", chung_res$n_male, chung_res$n_female, chung_res$effect_size, chung_res$effect_se, "Effect derived from regression-adjusted male-female contrast divided by residual SD."),
+  add_result("Guma et al. (2024)", "participant-level re-analysis", "Paper-matched HCP QC subset", "Adjusted standardized mean difference from lm", "AGE_cent, BrainSegVolNotVent.y, euler", guma_res$n_male[1], guma_res$n_female[1], guma_res$effect_size[1], guma_res$effect_se[1], "Effect derived from regression-adjusted male-female contrast divided by residual SD."),
+  add_result("Zhou et al. (1995)", "published summary statistics", "Adult cisgender participants; transgender hormone-treated participants excluded", "Cohen's d from reported means, SEMs, and reconstructed subgroup SDs", "None available", zhou$n_male, zhou$n_female, zhou$effect_size, zhou$effect_se, "Male group combines heterosexual and homosexual cisgender men; SEMs converted to SDs before pooling."),
   add_result("Slabe et al. (2023)", "published summary statistics", "As reported in paper", "Cohen's d from reported means, SDs, and n", "No global size adjustment available", slabe$n_male, slabe$n_female, slabe$effect_size, slabe$effect_se, "No TBV/brain-weight-adjusted effect available."),
-  add_result("Neudorfer et al. (2020)", "published TBV-normalised summary statistics", "As reported in paper", "Cohen's d from TBV-normalised means, SDs, and estimated sex-specific n", "TBV-normalised values reported by paper", neud$n_male, neud$n_female, neud$effect_size, neud$effect_se, "Sex split estimated from broader HCP Young Adult proportions.")
+  add_result("Neudorfer et al. (2020)", "published TBV-normalised summary statistics", "As reported in paper", "Cohen's d from TBV-normalised means, SDs, and estimated sex-specific n", "TBV-normalised values reported by paper", neud$n_male, neud$n_female, neud$effect_size, neud$effect_se, "Sex split estimated from Guma et al. HCP sex proportions because Neudorfer did not report sex-specific sample counts.")
 )
 
 write.csv(prior_table, file.path(results_dir, "BNST_prior_effect_sizes_all_studies.csv"), row.names = FALSE)
@@ -327,7 +331,9 @@ metafor::forest(sensitivity$exclude_zhou, slab = meta_no_zhou$study, xlab = "Sta
 metafor::forest(sensitivity$adjusted_only, slab = meta_adjusted_only$study, xlab = "Standardized mean difference", mlab = "Adjusted-only studies")
 grDevices::dev.off()
 
-inf <- metafor::influence(primary)
+# influence() is an S3 generic; the rma.uni method is registered by metafor
+# but is not exported as metafor::influence().
+inf <- stats::influence(primary)
 grDevices::pdf(file.path(figures_dir, "BNST_meta_analysis_influence_plot.pdf"), width = 7, height = 5)
 plot(inf)
 grDevices::dev.off()

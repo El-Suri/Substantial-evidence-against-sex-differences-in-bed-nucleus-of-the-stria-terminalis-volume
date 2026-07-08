@@ -4,7 +4,7 @@ this_file <- if (length(file_arg) > 0) sub("^--file=", "", file_arg[1]) else "sc
 source(file.path(dirname(normalizePath(this_file)), "_common.R"))
 
 root <- find_repo_root(script_dir())
-require_packages(c("brms", "posterior", "polspline", "bayesplot"))
+require_packages(c("brms", "posterior", "polspline", "bayesplot", "performance"))
 
 restricted_path <- read_arg("restricted")
 if (is.null(restricted_path)) {
@@ -112,6 +112,7 @@ fit_unilateral <- function(outcome, label) {
   )
   fixed <- as.data.frame(brms::fixef(fit, probs = c(0.025, 0.975)))
   draws <- posterior::as_draws_df(fit)
+  r2_bayes <- performance::r2(fit)
   diagnostics <- as.data.frame(posterior::summarise_draws(fit))
   sampler <- bayesplot::nuts_params(fit)
 
@@ -127,6 +128,8 @@ fit_unilateral <- function(outcome, label) {
     age_beta = fixed["Age_in_Yrs_Z", "Estimate"],
     age_ci_low = fixed["Age_in_Yrs_Z", "Q2.5"],
     age_ci_high = fixed["Age_in_Yrs_Z", "Q97.5"],
+    marginal_R2 = unname(r2_bayes$R2_Bayes_marginal[1]),
+    conditional_R2 = unname(r2_bayes$R2_Bayes[1]),
     max_rhat = max(diagnostics$rhat, na.rm = TRUE),
     min_bulk_ess = min(diagnostics$ess_bulk, na.rm = TRUE),
     min_tail_ess = min(diagnostics$ess_tail, na.rm = TRUE),
@@ -152,6 +155,8 @@ paired_row <- data.frame(
   age_beta = NA_real_,
   age_ci_low = NA_real_,
   age_ci_high = NA_real_,
+  marginal_R2 = NA_real_,
+  conditional_R2 = NA_real_,
   max_rhat = NA_real_,
   min_bulk_ess = NA_real_,
   min_tail_ess = NA_real_,
