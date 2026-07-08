@@ -1,0 +1,30 @@
+# Local HCP/restricted inputs
+data/local_inputs/*
+!data/local_inputs/README.md
+
+# Participant-level data to add only after HCP-approved study IDs are available
+data/open_derived/*.csv
+data/segmentations/*.nii
+data/segmentations/*.nii.gz
+
+# Prior inputs/results may be added only after source/data-use checks
+data/prior_sources/*.csv
+data/prior_sources/*.tsv
+data/prior_sources/*.xlsx
+data/prior_sources/*.rds
+data/prior_sources/*.RDS
+
+# Generated outputs
+results/*.csv
+results/*.txt
+results/*.pdf
+figures/*.pdf
+figures/*.png
+
+# Large or sensitive runtime artifacts
+*.rds
+*.RDS
+*.RData
+.Rhistory
+.DS_Store
+data/restricted_fast_outputs/

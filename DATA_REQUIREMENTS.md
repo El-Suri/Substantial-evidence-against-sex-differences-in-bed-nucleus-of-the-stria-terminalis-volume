@@ -31,7 +31,7 @@ Mask labels:
 
 ### `data/prior_sources/`
 
-Literature-derived prior inputs used by `scripts/02_create_prior_table.R`. The Guma et al. participant-level HCP file should not be redistributed.
+Literature-derived prior inputs used by `scripts/02_create_prior_table.R`. The script contains the summary-statistic derivations directly. Participant-level Allen/Gorski and Chung tables, and either a private Guma participant-level HCP file or a cached Guma adjusted-effect CSV, are required for a full rerun. The Guma et al. participant-level HCP file should not be redistributed.
 
 ## Local restricted data for exact reruns
 

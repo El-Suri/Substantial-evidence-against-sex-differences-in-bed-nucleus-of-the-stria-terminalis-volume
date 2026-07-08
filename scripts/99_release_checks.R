@@ -23,6 +23,7 @@ forbidden_data <- (
     grepl("^data/segmentations/.*[.]nii([.]gz)?$", relative, ignore.case = TRUE) |
     grepl("^data/prior_sources/.*[.](csv|tsv|xlsx|rds|RDS)$", relative, ignore.case = TRUE) |
     grepl("^results/.*[.](csv|tsv|pdf|rds|RDS|RData)$", relative, ignore.case = TRUE) |
+    grepl("^figures/.*[.](pdf|png|svg|jpg|jpeg|tiff)$", relative, ignore.case = TRUE) |
     (grepl("^data/local_inputs/", relative) & !grepl("^data/local_inputs/README[.]md$", relative))
 ) & is_file
 if (any(forbidden_data)) {
